@@ -11,11 +11,13 @@ class EmojiCountApp(rumps.App):
         self.file_types = file_types
         self.emoji_counts = {}
         self.emoji_files = {}
+        self.file_paths = {}
         self.update_emoji_counts()
 
     def update_emoji_counts(self):
         self.emoji_counts = {}
         self.emoji_files = {}
+        self.file_paths = {}
         for file in os.listdir(self.directory):
             if any(file.endswith(ft) for ft in self.file_types):
                 file_path = os.path.join(self.directory, file)
@@ -27,16 +29,16 @@ class EmojiCountApp(rumps.App):
                         self.emoji_counts[e] = self.emoji_counts.get(e, 0) + 1
                         if e not in self.emoji_files:
                             self.emoji_files[e] = set()
-                        self.emoji_files[e].add(file_path)
+                        self.emoji_files[e].add(file)
+                        self.file_paths[file] = file_path
         self.update_menu()
 
     def update_menu(self):
         self.menu.clear()
         for e, count in self.emoji_counts.items():
             emoji_menu = rumps.MenuItem(f"{e} ({count})")
-            for file_path in self.emoji_files[e]:
-                file_name = os.path.basename(file_path)
-                emoji_menu.add(rumps.MenuItem(file_name, callback=self.open_file))
+            for file in self.emoji_files[e]:
+                emoji_menu.add(rumps.MenuItem(file, callback=self.open_file))
             self.menu.add(emoji_menu)
         self.menu.add(rumps.MenuItem('Refresh', callback=self.refresh))
         self.update_title()
@@ -50,7 +52,7 @@ class EmojiCountApp(rumps.App):
         self.update_emoji_counts()
 
     def open_file(self, sender):
-        file_path = next(path for path in self.emoji_files[sender.parent.title[0]] if sender.title in path)
+        file_path = self.file_paths[sender.title]
         subprocess.run(['open', file_path])
 
 if __name__ == "__main__":
