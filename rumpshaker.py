@@ -2,7 +2,6 @@ import rumps
 import argparse
 import os
 import emoji
-import re
 
 class EmojiCountApp(rumps.App):
     def __init__(self, directory, file_types):
@@ -19,8 +18,9 @@ class EmojiCountApp(rumps.App):
                 file_path = os.path.join(self.directory, file)
                 with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
-                    emojis = re.findall(emoji.get_emoji_regexp(), content)
-                    for e in emojis:
+                    emojis = emoji.emoji_list(content)
+                    for emoji_dict in emojis:
+                        e = emoji_dict['emoji']
                         self.emoji_counts[e] = self.emoji_counts.get(e, 0) + 1
         self.update_title()
 
@@ -42,7 +42,6 @@ if __name__ == "__main__":
     parser.add_argument("directory", type=str, help="Directory to search for files")
     parser.add_argument("file_types", nargs='+', help="File types to include (e.g. .txt .md)")
     args = parser.parse_args()
-    print(args)
 
     app = EmojiCountApp(args.directory, args.file_types)
     app.run()
