@@ -2,6 +2,7 @@ import rumps
 import argparse
 import os
 import emoji
+import subprocess
 
 class EmojiCountApp(rumps.App):
     def __init__(self, directory, file_types):
@@ -9,10 +10,12 @@ class EmojiCountApp(rumps.App):
         self.directory = directory
         self.file_types = file_types
         self.emoji_counts = {}
+        self.emoji_files = {}
         self.update_emoji_counts()
 
     def update_emoji_counts(self):
         self.emoji_counts = {}
+        self.emoji_files = {}
         for file in os.listdir(self.directory):
             if any(file.endswith(ft) for ft in self.file_types):
                 file_path = os.path.join(self.directory, file)
@@ -22,6 +25,20 @@ class EmojiCountApp(rumps.App):
                     for emoji_dict in emojis:
                         e = emoji_dict['emoji']
                         self.emoji_counts[e] = self.emoji_counts.get(e, 0) + 1
+                        if e not in self.emoji_files:
+                            self.emoji_files[e] = set()
+                        self.emoji_files[e].add(file_path)
+        self.update_menu()
+
+    def update_menu(self):
+        self.menu.clear()
+        for e, count in self.emoji_counts.items():
+            emoji_menu = rumps.MenuItem(f"{e} ({count})")
+            for file_path in self.emoji_files[e]:
+                file_name = os.path.basename(file_path)
+                emoji_menu.add(rumps.MenuItem(file_name, callback=self.open_file))
+            self.menu.add(emoji_menu)
+        self.menu.add(rumps.MenuItem('Refresh', callback=self.refresh))
         self.update_title()
 
     def update_title(self):
@@ -32,10 +49,9 @@ class EmojiCountApp(rumps.App):
     def refresh(self, _):
         self.update_emoji_counts()
 
-    @rumps.clicked('Show Details')
-    def show_details(self, _):
-        details = "\n".join([f"{e}: {c}" for e, c in self.emoji_counts.items()])
-        rumps.Window(message=details, title="Emoji Counts", default_text="", ok="OK").run()
+    def open_file(self, sender):
+        file_path = next(path for path in self.emoji_files[sender.parent.title[0]] if sender.title in path)
+        subprocess.run(['open', file_path])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Count emojis in files of specific types in a directory")
