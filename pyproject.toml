@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools-scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rumpshaker"
+description = "A menubar app that counts emojis in files"
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+]
+dependencies = [
+    "rumps",
+    "emoji",
+]
+dynamic = ["version"]
+
+[project.scripts]
+rumpshaker = "rumpshaker:main"
+
+[tool.setuptools_scm]
+
+[tool.setuptools]
+py-modules = ["rumpshaker"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
